@@ -1,0 +1,17 @@
+backend:
+  name: git-gateway
+  branch: main
+
+media_folder: "images"
+public_folder: "/images"
+
+collections:
+  - name: "research"
+    label: "أبحاث المعرض"
+    folder: "content/research"
+    create: true
+    fields:
+      - {label: "عنوان البحث", name: "title", widget: "string"}
+      - {label: "وصف البحث", name: "description", widget: "text"}
+      - {label: "رقم الفهرس", name: "index_num", widget: "string"}
+      - {label: "صورة البحث", name: "image", widget: "image"}
