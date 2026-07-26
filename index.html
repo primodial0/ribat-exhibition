@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>معرض جامعة الرباط الوطني</title>
+  <!-- FontAwesome لأيقونات الأقسام -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #1C6E6A;
+      --accent: #C9A24B;
+      --bg-dark: #0F172A;
+      --card-bg: #1E293B;
+      --text-light: #F8FAFC;
+      --text-muted: #94A3B8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-light);
+      overflow-x: hidden;
+    }
+
+    /* خلفية الكانفاس للجسيمات */
+    #particle-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    /* صفحة الدخول (Landing Page) */
+    #landing {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: rgba(15, 23, 42, 0.95);
+      z-index: 100;
+      transition: opacity 1s ease, visibility 1s ease;
+      text-align: center;
+      padding: 20px;
+    }
+
+    #landing.fade-out {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    #landing h1 {
+      font-size: 2.2rem;
+      color: var(--accent);
+      margin-bottom: 15px;
+    }
+
+    #landing p {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      margin-bottom: 30px;
+    }
+
+    #enterBtn {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px 30px;
+      font-size: 1.1rem;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.2s;
+    }
+
+    #enterBtn:active {
+      transform: scale(0.95);
+    }
+
+    /* معرض البطاقات */
+    #gallery {
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 1s ease;
+      padding: 40px 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    #gallery.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .gallery-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .gallery-header h2 {
+      font-size: 2rem;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 25px;
+    }
+
+    /* البطاقات وتأثير Scroll Reveal */
+    .card {
+      background-color: var(--card-bg);
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.6s ease, transform 0.6s ease, box-shadow 0.3s;
+    }
+
+    .card.in-view {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .card:hover {
+      box-shadow: 0 8px 25px rgba(201, 162, 75, 0.2);
+    }
+
+    .card-media {
+      height: 180px;
+      background-size: cover;
+      background-position: center;
+      position: relative;
+    }
+
+    .card-icon {
+      position: absolute;
+      bottom: -20px;
+      right: 20px;
+      background-color: var(--primary);
+      color: white;
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+    .card-body {
+      padding: 25px 20px 20px;
+    }
+
+    .card-title {
+      font-size: 1.3rem;
+      color: var(--text-light);
+      margin-bottom: 10px;
+    }
+
+    .card-text {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      padding-top: 15px;
+    }
+
+    .card-index {
+      color: var(--accent);
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+
+    .read-more-btn {
+      background: none;
+      border: none;
+      color: var(--primary);
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: color 0.2s;
+    }
+
+    .read-more-btn:hover {
+      color: var(--accent);
+    }
+
+    .gallery-footer {
+      text-align: center;
+      margin-top: 50px;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- خلفية الجسيمات المتحركة -->
+  <canvas id="particle-canvas"></canvas>
+
+  <!-- صفحة الترحيب والدخول -->
+  <div id="landing">
+    <h1>معرض جامعة الرباط الوطني</h1>
+    <p>اكتشف الإبداعات والمشاريع العلمية بطريقة تفاعلية مميزة</p>
+    <button id="enterBtn">دخول المعرض <i class="fa-solid fa-arrow-left"></i></button>
+  </div>
+
+  <!-- محتوى المعرض -->
+  <section id="gallery">
+    <div class="gallery-header">
+      <h2>أقسام ومشاريع المعرض</h2>
+      <p>نبذة مختارة عن الأجنحة والأعمال المشاركة</p>
+    </div>
+
+    <div class="cards-grid">
+      <!-- البطاقة 1 -->
+      <article class="card">
+        <div class="card-media" style="background-image:url('https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?q=80&w=800');">
+          <div class="card-icon"><i class="fa-solid fa-stethoscope"></i></div>
+        </div>
+        <div class="card-body">
+          <div class="card-title">الابتكارات الطبية</div>
+          <p class="card-text">استعراض لأحدث الحلول التكنولوجية المساندة للقطاع الصحي، وتطبيقات الذكاء الاصطناعي في تشخيص الأمراض المبكرة.</p>
+          <div class="card-footer">
+            <span class="card-index">01</span>
+            <button class="read-more-btn">اقرأ المزيد <i class="fa-solid fa-arrow-left"></i></button>
+          </div>
+        </div>
+      </article>
+
+      <!-- البطاقة 2 -->
+      <article class="card">
+        <div class="card-media" style="background-image:url('https://images.unsplash.com/photo-1581092160607-ee22621dd758?q=80&w=800');">
+          <div class="card-icon"><i class="fa-solid fa-microchip"></i></div>
+        </div>
+        <div class="card-body">
+          <div class="card-title">الهندسة والتقنية</div>
+          <p class="card-text">مشاريع هندسية متقدمة في مجالات الروبوتات وأنظمة الطاقة المتجددة، مصممة بأعلى معايير الابتكار والاستدامة.</p>
+          <div class="card-footer">
+            <span class="card-index">02</span>
+            <button class="read-more-btn">اقرأ المزيد <i class="fa-solid fa-arrow-left"></i></button>
+          </div>
+        </div>
+      </article>
+
+      <!-- البطاقة 3 -->
+      <article class="card">
+        <div class="card-media" style="background-image:url('https://images.unsplash.com/photo-1532094349884-543bc11b234d?q=80&w=800');">
+          <div class="card-icon"><i class="fa-solid fa-flask"></i></div>
+        </div>
+        <div class="card-body">
+          <div class="card-title">البحوث الصيدلانية</div>
+          <p class="card-text">دراسات علمية متعمقة حول الخلاصات الدوائية المحلية وتطوير آليات إيصال الأدوية للجسم بكفاءة عالية وأمان تام.</p>
+          <div class="card-footer">
+            <span class="card-index">03</span>
+            <button class="read-more-btn">اقرأ المزيد <i class="fa-solid fa-arrow-left"></i></button>
+          </div>
+        </div>
+      </article>
+
+      <!-- البطاقة 4 -->
+      <article class="card">
+        <div class="card-media" style="background-image:url('https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=800');">
+          <div class="card-icon"><i class="fa-solid fa-chart-line"></i></div>
+        </div>
+        <div class="card-body">
+          <div class="card-title">العلوم الإدارية</div>
+          <p class="card-text">نماذج تحليلية مبتكرة لإدارة الأزمات الاقتصادية وتخطيط المشاريع الاستراتيجية باستخدام المؤشرات الرقمية الحديثة.</p>
+          <div class="card-footer">
+            <span class="card-index">04</span>
+            <button class="read-more-btn">اقرأ المزيد <i class="fa-solid fa-arrow-left"></i></button>
+          </div>
+        </div>
+      </article>
+
+      <!-- البطاقة 5: الإسعافات الأولية -->
+      <article class="card">
+        <div class="card-media" style="background-image:url('https://images.unsplash.com/photo-1603398938378-e54eab446dde?q=80&w=800');">
+          <div class="card-icon"><i class="fa-solid fa-kit-medical"></i></div>
+        </div>
+        <div class="card-body">
+          <div class="card-title">الإسعافات الأولية</div>
+          <p class="card-text">دليل عملي للإجراءات الإسعافية الأساسية في الحالات الطارئة، وكيفية التصرف السليم قبل وصول الطاقم الطبي المختص.</p>
+          <div class="card-footer">
+            <span class="card-index">05</span>
+            <button class="read-more-btn">اقرأ المزيد <i class="fa-solid fa-arrow-left"></i></button>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <div class="gallery-footer">© جامعة الرباط الوطني — جميع الحقوق محفوظة</div>
+  </section>
+
+  <script>
+    /* الانتقال بين صفحة الدخول وصفحة المعرض */
+    const landing  = document.getElementById('landing');
+    const gallery  = document.getElementById('gallery');
+    const enterBtn = document.getElementById('enterBtn');
+
+    enterBtn.addEventListener('click', () => {
+      landing.classList.add('fade-out');
+      setTimeout(() => {
+        landing.style.display = 'none';
+        gallery.classList.add('visible');
+        window.scrollTo({top:0, behavior:'instant'});
+      }, 950);
+    });
+
+    /* إعدادات الكانفاس والجسيمات وتفاعل اللمس */
+    const canvas = document.getElementById('particle-canvas');
+    const ctx = canvas.getContext('2d');
+    let width, height, particles;
+
+    const particleCount  = 60;
+    const lineDistance   = 130;
+    const speed          = 0.18;
+
+    const pointer = { x: -1000, y: -1000, active: false };
+    const pointerRadius = 120;
+    const pointerForce  = 0.4;
+
+    window.addEventListener('mousemove', (e) => {
+      pointer.x = e.clientX;
+      pointer.y = e.clientY;
+      pointer.active = true;
+    });
+
+    window.addEventListener('touchmove', (e) => {
+      if(e.touches.length > 0){
+        pointer.x = e.touches[0].clientX;
+        pointer.y = e.touches[0].clientY;
+        pointer.active = true;
+      }
+    }, {passive: true});
+
+    window.addEventListener('touchend', () => {
+      pointer.active = false;
+    });
+
+    function resize(){
+      width  = canvas.width  = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    function initParticles(){
+      particles = Array.from({length:particleCount}, () => ({
+        x: Math.random()*width,
+        y: Math.random()*height,
+        vx: (Math.random()-0.5)*speed,
+        vy: (Math.random()-0.5)*speed,
+        r: Math.random()*1.6+0.6
+      }));
+    }
+    initParticles();
+
+    function drawParticles(){
+      ctx.clearRect(0,0,width,height);
+
+      particles.forEach(p=>{
+        p.x += p.vx; p.y += p.vy;
+        if(p.x < 0 || p.x > width)  p.vx *= -1;
+        if(p.y < 0 || p.y > height) p.vy *= -1;
+
+        if(pointer.active){
+          const dx = pointer.x - p.x;
+          const dy = pointer.y - p.y;
+          const dist = Math.sqrt(dx*dx + dy*dy);
+          if(dist < pointerRadius && dist > 0.01){
+            const strength = (1 - dist / pointerRadius) * pointerForce;
+            p.x += (dx / dist) * strength * 4;
+            p.y += (dy / dist) * strength * 4;
+          }
+        }
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+        ctx.fillStyle = 'rgba(201,162,75,0.55)';
+        ctx.fill();
+      });
+
+      for(let i=0;i<particles.length;i++){
+        for(let j=i+1;j<particles.length;j++){
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const dist = Math.sqrt(dx*dx + dy*dy);
+          if(dist < lineDistance){
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.strokeStyle = `rgba(28,110,106,${1 - dist/lineDistance})`;
+            ctx.lineWidth = 0.6;
+            ctx.stroke();
+          }
+        }
+      }
+
+      requestAnimationFrame(drawParticles);
+    }
+    drawParticles();
+
+    /* تأثير ظهور البطاقات عند التمرير (Scroll Reveal) */
+    const revealCards = document.querySelectorAll('.card');
+
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry, i) => {
+        if(entry.isIntersecting){
+          const card = entry.target;
+          card.style.transitionDelay = `${i * 0.09}s`;
+          card.classList.add('in-view');
+
+          card.addEventListener('transitionend', function clearDelay(){
+            card.style.transitionDelay = '0s';
+            card.removeEventListener('transitionend', clearDelay);
+          }, { once:true });
+
+          revealObserver.unobserve(card);
+        }
+      });
+    }, {
+      threshold: 0.18,
+      rootMargin: '0px 0px -40px 0px'
+    });
+
+    revealCards.forEach(card => revealObserver.observe(card));
+  </script>
+</body>
+</html>
